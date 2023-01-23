@@ -259,11 +259,6 @@ void Renderer::tmapEnable(StateVar::Value& value)
     C3D_BOOL enable = value.boolean;
     m_program.uniform1i("tmapEn", enable);
     m_transDelay.setTexturingEnabled(enable != C3D_FALSE);
-    if (enable) {
-        glEnable(GL_TEXTURE_2D);
-    } else {
-        glDisable(GL_TEXTURE_2D);
-    }
 }
 
 void Renderer::tmapSelect(StateVar::Value& value)
