@@ -15,6 +15,10 @@ using std::placeholders::_1;
 
 Renderer::Renderer()
 {
+    // The vertex stream passes primitives to the delayer to test if they have translucency and
+    // in that case delay them. When the delayer needs to display the delayed primitives it calls
+    // back to the vertex stream to do so.
+    m_vertexStream.setDelayer([this](C3D_VTCF *verts) {return m_transDelay.delayTriangle(verts);});
     // register state observers
     // clang-format off
     m_state.registerObserver(std::bind(&Renderer::switchState, this, _1), C3D_ERS_VERTEX_TYPE);
@@ -114,6 +118,9 @@ void Renderer::renderEnd()
 {
     // make sure everything has been rendered
     m_vertexStream.renderPending();
+    // including the delayed translucent primitives
+    m_program.uniform1i("keyOnAlpha", true);
+    m_transDelay.render([this](std::vector<C3D_VTCF> verts) {m_vertexStream.renderPrims(verts);});
 
     // restore polygon mode
     if (m_wireframe) {
@@ -251,6 +258,14 @@ void Renderer::tmapEnable(StateVar::Value& value)
 {
     C3D_BOOL enable = value.boolean;
     m_program.uniform1i("tmapEn", enable);
+    m_transDelay.setTexturingEnabled(enable != C3D_FALSE);
+    /*
+    if (enable) {
+        glEnable(GL_TEXTURE_2D);
+    } else {
+        glDisable(GL_TEXTURE_2D);
+    }
+    */
 }
 
 void Renderer::tmapSelect(StateVar::Value& value)
@@ -275,11 +290,14 @@ void Renderer::tmapSelectImpl(C3D_HTX handle)
     // get texture object and bind it
     auto texture = it->second;
     texture->bind();
+    // Tell the transparent primitive delayer what texture is currently in use
+    m_transDelay.setTexture(texture);
 
     // send chroma key color to shader
     auto ck = texture->chromaKey();
     m_program.uniform3f(
         "chromaKey", ck.r / 255.0f, ck.g / 255.0f, ck.b / 255.0f);
+    m_program.uniform1i("keyOnAlpha", texture->keyOnAlpha());
 }
 
 void Renderer::tmapRestore() {
