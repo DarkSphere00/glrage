@@ -10,17 +10,7 @@ namespace glrage {
 namespace ddraw {
 
 Renderer::Renderer()
-    : m_surfaceBuffer(GL_ARRAY_BUFFER)
 {
-    // configure buffer
-    m_surfaceBuffer.bind();
-    GLfloat verts[] = { 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                        0.0, 1.0, 1.0, 0.0, 1.0, 1.0 };
-    m_surfaceBuffer.data(sizeof(verts), verts, GL_STATIC_DRAW);
-
-    m_surfaceFormat.bind();
-    m_surfaceFormat.attribute(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
     // configure sampler
     std::string filterMethod =
         m_config.getString("directdraw.filter_method", "linear");
@@ -103,15 +93,9 @@ void Renderer::upload(DDSURFACEDESC& desc, std::vector<uint8_t>& data)
 void Renderer::render()
 {
     m_program.bind();
-    m_surfaceBuffer.bind();
     m_surfaceFormat.bind();
     m_surfaceTexture.bind();
     m_sampler.bind(0);
-
-    GLboolean texture2d = glIsEnabled(GL_TEXTURE_2D);
-    if (!texture2d) {
-        glEnable(GL_TEXTURE_2D);
-    }
 
     GLboolean blend = glIsEnabled(GL_BLEND);
     if (blend) {
@@ -123,11 +107,7 @@ void Renderer::render()
         glDisable(GL_DEPTH_TEST);
     }
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    if (!texture2d) {
-        glDisable(GL_TEXTURE_2D);
-    }
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     if (blend) {
         glEnable(GL_BLEND);

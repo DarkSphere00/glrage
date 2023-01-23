@@ -37,7 +37,6 @@ private:
     uint32_t m_width = 0;
     uint32_t m_height = 0;
     gl::VertexArray m_surfaceFormat;
-    gl::Buffer m_surfaceBuffer;
     gl::Texture m_surfaceTexture = GL_TEXTURE_2D;
     gl::Sampler m_sampler;
     gl::Program m_program;
